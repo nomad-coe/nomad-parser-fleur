@@ -31,6 +31,7 @@ object FleurParser extends SimpleExternalParserGenerator(
     "--uri", "${mainFileUri}", "${mainFilePath}"),
   resList = Seq(
     "parser-fleur/fleur_parser.py",
+    "parser-fleur/fleur_parser_inp.py",
     "parser-fleur/setup_paths.py",
     "nomad_meta_info/public.nomadmetainfo.json",
     "nomad_meta_info/common.nomadmetainfo.json",
