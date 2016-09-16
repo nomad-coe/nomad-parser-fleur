@@ -196,6 +196,10 @@ mainFileDescription = SM(
                         SM(r"\s*number of atom types=\s*(?P<x_fleur_nr_of_atom_types>[0-9]+)"),#L160
                         SM(r"\s*total number of atoms=\s*(?P<x_fleur_total_atoms>[0-9]+)"),
 
+                        SM(r"\s*(?P<x_fleur_smearing_kind>\w*)-integration is used\s*.*"),#L187
+                        SM(r"\s*gaussian half width\s*=\s*(?P<x_fleur_smearing_width>[0-9.]+)"),#188
+                        SM(r"\s*number of valence electrons=\s*(?P<x_fleur_nr_of_valence_electrons>[0-9.]+)"),#190
+                        SM(r"\s*temperature broadening\s*=\s*(?P<x_fleur_smearing_temperature>[0-9.]+)"),#191
 
                         SM(r"\s*total electronic charge   =\s*(?P<x_fleur_tot_elec_charge>.*)"),#L1107
                         SM(r"\s*total nuclear charge      =\s*(?P<x_fleur_tot_nucl_charge>.*)") #L1108
