@@ -20,7 +20,12 @@ class FleurContext(object):
 
     def initialize_values(self):
         """allows to reset values if the same superContext is used to parse different files"""
-        pass
+       # pass
+    
+        self.metaInfoEnv = self.parser.parserBuilder.metaInfoEnv
+        self.secMethodIndex = None
+        self.secSystemDescriptionIndex = None
+        self.scfIterNr = 0
 
     def startedParsing(self, path, parser):
         """called when parsing starts"""
@@ -45,7 +50,68 @@ class FleurContext(object):
 
             with open(fName) as fIn:
                 inpParser.parseFile(fIn)
+
+    def onClose_section_single_configuration_calculation(self, backend, gIndex, section):
+       # write number of SCF iterations
+        backend.addValue('number_of_scf_iterations', self.scfIterNr)
+        # write the references to section_method and section_system
+        backend.addValue('single_configuration_to_calculation_method_ref', self.secMethodIndex)
+        backend.addValue('single_configuration_calculation_to_system_ref', self.secSystemDescriptionIndex)
+   
+    def onClose_section_scf_iteration(self, backend, gIndex, section):
+        #Trigger called when section_scf_iteration is closed.
+        
+        # count number of SCF iterations
+        self.scfIterNr += 1
+
+
+    def onClose_x_fleur_section_XC(self, backend, gIndex, section):
+        xc_index = section["x_fleur_exch_pot"]
+        if not xc_index:
+            functional = "Rpbe"
+        if functional:
+            xc_map_legend = {
+
+                'pbe': ['GGA_X_PBE', 'GGA_C_PBE'],
+
+                'rpbe': ['GGA_X_PBE', 'GGA_C_PBE'],
+
+                'Rpbe': ['GGA_X_RPBE'],
                 
+                'pw91': ['GGA_X_PW91','GGA_C_PW91'],
+                
+                'l91': ['LDA_C_PW','LDA_C_PW_RPA','LDA_C_PW_MOD','LDA_C_OB_PW'],
+
+                'vwn': ['LDA_C_VWN','LDA_C_VWN_1','LDA_C_VWN_2','LDA_C_VWN_3','LDA_C_VWN_4','LDA_C_VWN_RPA'],
+
+                'bh': ['LDA_C_VBH'],
+
+                'pz':['LDA_C_PZ'],
+
+                'x-a': [],
+
+                'mjw': [],
+
+                'wign': [],
+
+                'hl': [],
+
+                'xal': [],
+
+                'relativistic': ['---']
+            #http://dx.doi.org/10.1088/0022-3719/12/15/007
+
+            }
+    
+            # Push the functional string into the backend
+            nomadNames = xc_map_legend.get(functional)
+            if not nomadNames:
+                raise Exception("Unhandled xc functional %s found" % functional)
+
+            for xc_name in nomadNames:
+                s = backend.openSection("section_XC_functionals")
+                backend.addValue("XC_functional_name", xc_name)
+                backend.closeSection("section_XC_functionals", s)
 
 
 #    def onClose_section_run(self, backend, gIndex, section):
@@ -64,51 +130,6 @@ class FleurContext(object):
 #        backend.addValue("frame_sequence_to_sampling_ref", samplingGIndex)
 #        backend.addArrayValues("frame_sequence_local_frames_ref", np.asarray(self.singleConfCalcs))
 #        backend.closeSection("section_frame_sequence", frameSequenceGIndex)
-
-
-
-def onClose_x_fleur_section_XC(self, backend, gIndex, section):
-    xc_index = section["x_fleur_exch_pot"][0]
-    xc_map_legend = {
-
-        pbe: ['GGA_X_PBE', 'GGA_C_PBE'],
-
-        rpbe: ['GGA_X_PBE', 'GGA_C_PBE'],
-
-        Rpbe: ['GGA_X_RPBE'],
-
-        pw91: ['GGA_X_PW91','GGA_C_PW91'],
-
-        l91: ['LDA_C_PW','LDA_C_PW_RPA','LDA_C_PW_MOD','LDA_C_OB_PW'],
-
-        vwn: ['LDA_C_VWN','LDA_C_VWN_1','LDA_C_VWN_2','LDA_C_VWN_3','LDA_C_VWN_4','LDA_C_VWN_RPA'],
-
-        bh: ['LDA_C_VBH'],
-
-        pz:['LDA_C_PZ'],
-
-        x-a: [],
-
-        mjw: [],
-
-        wign: [],
-
-        hl: [],
-
-        xal: [],
-
-        relativistic: ['---'],#http://dx.doi.org/10.1088/0022-3719/12/15/007
-
-    }
-        # Push the functional string into the backend
-    nomadNames = xc_map_legend.get(x_fleur_exch_pot)
-    if not xc_map_legend:
-        raise Exception("Unhandled xc functional %s found" % nomadNames)
-
-        for xc_name in xc_map_legend[xc_index]:
-          s = backend.openSection("section_XC_functionals")
-          backend.addValue("XC_functional_name", xc_name)
-          backend.closeSection("section_XC_functionals", s)
 
 
 
