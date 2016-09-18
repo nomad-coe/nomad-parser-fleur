@@ -30,6 +30,8 @@ class FleurContext(object):
     def startedParsing(self, path, parser):
         """called when parsing starts"""
         self.parser = parser
+        self.metaInfoEnv = self.parser.parserBuilder.metaInfoEnv
+
         # allows to reset values if the same superContext is used to parse different files
         self.initialize_values()
 
@@ -68,7 +70,7 @@ class FleurContext(object):
     def onClose_x_fleur_section_XC(self, backend, gIndex, section):
         xc_index = section["x_fleur_exch_pot"]
         if not xc_index:
-            functional = "Rpbe"
+            functional = "pbe"
         if functional:
             xc_map_legend = {
 
@@ -229,7 +231,7 @@ mainFileDescription = SM(
             
                 SM(
                       name = "scf iteration",
-                      startReStr = r"\s*it=       (?P<x_fleur_iteration_number>[0-9]+)",
+                      startReStr = r"\s*it=       \s*(?P<x_fleur_iteration_number>[0-9]+)",
                       sections=["section_scf_iteration"],
                       repeats = True,
                       subMatchers=[
@@ -239,6 +241,14 @@ mainFileDescription = SM(
                 ])
               ])
 
+# which values to cache or forward (mapping meta name -> CachingLevel)
+
+cachingLevelForMetaName = {
+
+    "XC_functional_name": CachingLevel.ForwardAndCache,
+    "energy_total": CachingLevel.ForwardAndCache
+    
+ }
 # loading metadata from nomad-meta-info/meta_info/nomad_meta_info/fleur.nomadmetainfo.json
 
 parserInfo = {
