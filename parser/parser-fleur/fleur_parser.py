@@ -5,7 +5,7 @@ from nomadcore.simple_parser import mainFunction, AncillaryParser, CachingLevel
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
 import os, sys, json
 import fleur_parser_inp
-#import FleurXMLParser
+import fleur_XML_parser
 
 ################################################################
 # This is the parser for the main output file of Fleur (out)
@@ -17,15 +17,18 @@ class FleurContext(object):
 
     def __init__(self):
         self.parser = None
+        self.secMethodIndex = None
+        self.secSystemIndex = None       
 
     def initialize_values(self):
         """allows to reset values if the same superContext is used to parse different files"""
        # pass
     
-        self.metaInfoEnv = self.parser.parserBuilder.metaInfoEnv
+#        self.metaInfoEnv = self.parser.parserBuilder.metaInfoEnv
         self.secMethodIndex = None
-        self.secSystemDescriptionIndex = None
+        self.secSystemIndex = None
         self.scfIterNr = 0
+
 
     def startedParsing(self, path, parser):
         """called when parsing starts"""
@@ -38,6 +41,7 @@ class FleurContext(object):
     def onClose_x_fleur_header(self, backend, gIndex, section):
         backend.addValue("program_version",
                          section["x_fleur_version"][0])
+
 
     def onOpen_section_system(self, backend, gIndex, section):
         mainFile = self.parser.fIn.fIn.name
@@ -53,12 +57,51 @@ class FleurContext(object):
             with open(fName) as fIn:
                 inpParser.parseFile(fIn)
 
+
+
+    def onOpen_section_system(self, backend, gIndex, section):
+        mainFile = self.parser.fIn.fIn.name
+        fName = mainFile[:-4] + ".xml"
+        if os.path.exists(fName):
+            xmlSuperContext = fleur_parser_xml.FleurXmlContext()
+            xmlParser = AncillaryParser(
+                fileDescription = fleur_parser_xml.buildXmlMatchers(),
+                parser = self.parser,
+                cachingLevelForMetaName = fleur_parser_xml.get_cachingLevelForMetaName(self.metaInfoEnv, CachingLevel.PreOpenedIgnore),
+                superContext = xmlSuperContext)
+
+            with open(fName) as fXml:
+                xmlParser.parseFile(fXml)
+
+
     def onClose_section_single_configuration_calculation(self, backend, gIndex, section):
-       # write number of SCF iterations
+        """Trigger called when section_single_configuration_calculation is opened.
+        """
+        # write number of SCF iterations
         backend.addValue('number_of_scf_iterations', self.scfIterNr)
+        
         # write the references to section_method and section_system
+        #        method_index = self.secMethodIndex("single_configuration_to_calculation_method_ref")
+        #        if method_index is not None:
+        
         backend.addValue('single_configuration_to_calculation_method_ref', self.secMethodIndex)
-        backend.addValue('single_configuration_calculation_to_system_ref', self.secSystemDescriptionIndex)
+        #        system_index = self.secSystemIndex("single_configuration_calculation_to_system_ref")
+        #        if system_index is not None:
+                
+        backend.addValue('single_configuration_calculation_to_system_ref', self.secSystemIndex)
+
+            
+    def onOpen_section_method(self, backend, gIndex, section):
+        if self.secMethodIndex is None:
+            self.secMethodIndex = gIndex
+#        self.secMethodIndex["single_configuration_to_calculation_method_ref"] = gIndex
+
+
+    def onOpen_section_system(self, backend, gIndex, section):
+        if self.secSystemIndex is None:        
+            self.secSystemIndex = gIndex
+#        self.secSystemIndex["single_configuration_calculation_to_system_ref"] = gIndex    
+
    
     def onClose_section_scf_iteration(self, backend, gIndex, section):
         #Trigger called when section_scf_iteration is closed.
@@ -115,6 +158,7 @@ class FleurContext(object):
                 backend.addValue("XC_functional_name", xc_name)
                 backend.closeSection("section_XC_functionals", s)
 
+#*
 
 #    def onClose_section_run(self, backend, gIndex, section):
 #        """Trigger called when section_run is closed.
