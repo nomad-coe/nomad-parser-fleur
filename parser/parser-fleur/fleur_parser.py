@@ -4,8 +4,9 @@ from nomadcore.simple_parser import SimpleMatcher as SM
 from nomadcore.simple_parser import mainFunction, AncillaryParser, CachingLevel
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
 import os, sys, json
-import fleur_parser_inp
-import fleur_XML_parser
+import numpy as np
+#import fleur_parser_inp
+#import fleur_XML_parser
 
 ################################################################
 # This is the parser for the main output file of Fleur (out)
@@ -17,6 +18,7 @@ class FleurContext(object):
 
     def __init__(self):
         self.parser = None
+        self.rootSecMethodIndex = None
         self.secMethodIndex = None
         self.secSystemIndex = None       
 
@@ -25,6 +27,8 @@ class FleurContext(object):
        # pass
     
 #        self.metaInfoEnv = self.parser.parserBuilder.metaInfoEnv
+
+        self.rootSecMethodIndex = None
         self.secMethodIndex = None
         self.secSystemIndex = None
         self.scfIterNr = 0
@@ -59,7 +63,6 @@ class FleurContext(object):
 
 
 
-    def onOpen_section_system(self, backend, gIndex, section):
         mainFile = self.parser.fIn.fIn.name
         fName = mainFile[:-4] + ".xml"
         if os.path.exists(fName):
@@ -70,8 +73,8 @@ class FleurContext(object):
                 cachingLevelForMetaName = fleur_parser_xml.get_cachingLevelForMetaName(self.metaInfoEnv, CachingLevel.PreOpenedIgnore),
                 superContext = xmlSuperContext)
 
-            with open(fName) as fXml:
-                xmlParser.parseFile(fXml)
+            with open(fName) as fIn:
+                xmlParser.parseFile(fIn)
 
 
     def onClose_section_single_configuration_calculation(self, backend, gIndex, section):
@@ -92,23 +95,77 @@ class FleurContext(object):
 
             
     def onOpen_section_method(self, backend, gIndex, section):
-        if self.secMethodIndex is None:
-            self.secMethodIndex = gIndex
+        #if self.secMethodIndex is None:
+        if self.rootSecMethodIndex is None:
+            self.rootSecMethodIndex = gIndex
+        self.secMethodIndex = gIndex
 #        self.secMethodIndex["single_configuration_to_calculation_method_ref"] = gIndex
 
 
     def onOpen_section_system(self, backend, gIndex, section):
-        if self.secSystemIndex is None:        
-            self.secSystemIndex = gIndex
-#        self.secSystemIndex["single_configuration_calculation_to_system_ref"] = gIndex    
+        #if self.secSystemIndex is None:        
+        self.secSystemIndex = gIndex
+        #        self.secSystemIndex["single_configuration_calculation_to_system_ref"] = gIndex    
+
+    def onClose_section_system(self, backend, gIndex, section):
+
+        #backend.addValue("smearing_kind", x_fleur_smearing_kind)
+        smear_kind = section['x_fleur_smearing_kind']
+        if smear_kind is not None:
+        #    value = ''
+            backend.addValue('x_fleur_smearing_kind', value)
+
+
+        smear_width = section['x_fleur_smearing_width']
+        if smear_width is not None:
+        #    value = ''
+            backend.addValue('x_fleur_smearing_width', value)
+
 
    
+         #------1.atom_positions
+        atom_pos = []
+        for i in ['x', 'y', 'z']:
+            api = section['x_fleur_atom_pos_' + i]
+            if api is not None:
+               atom_pos.append(api)
+        if atom_pos:
+            # need to transpose array since its shape is [number_of_atoms,3] in the metadata
+           backend.addArrayValues('atom_positions', np.transpose(np.asarray(atom_pos)))
+
+         #------2.atom labels
+        atom_labels = section['x_fleur_atom_name']
+        if atom_labels is not None:
+           backend.addArrayValues('atom_labels', np.asarray(atom_labels))
+
+        #------3.atom force
+        atom_force = []
+        for i in ['x', 'y', 'z']:
+            api = section['x_fleur_tot_for_' + i]
+            if api is not None:
+               atom_force.append(api)
+        if atom_force:
+            # need to transpose array since its shape is [number_of_atoms,3] in the metadata
+           backend.addArrayValues('atom_forces', np.transpose(np.asarray(atom_force)))
+           
+        #----4. unit_cell
+        unit_cell = []
+        for i in ['x', 'y', 'z']:
+            uci = section['x_fleur_lattice_vector_' + i]
+            if uci is not None:
+                unit_cell.append(uci)
+        if unit_cell:
+           backend.addArrayValues('simulation_cell', np.asarray(unit_cell))
+           backend.addArrayValues("configuration_periodic_dimensions", np.ones(3, dtype=bool))
+
+
+
+
     def onClose_section_scf_iteration(self, backend, gIndex, section):
         #Trigger called when section_scf_iteration is closed.
         
         # count number of SCF iterations
         self.scfIterNr += 1
-
 
     def onClose_x_fleur_section_XC(self, backend, gIndex, section):
         xc_index = section["x_fleur_exch_pot"]
@@ -157,6 +214,8 @@ class FleurContext(object):
                 s = backend.openSection("section_XC_functionals")
                 backend.addValue("XC_functional_name", xc_name)
                 backend.closeSection("section_XC_functionals", s)
+
+
 
 #*
 
@@ -239,23 +298,48 @@ mainFileDescription = SM(
                 repeats = True,
                 required = True,
                 forwardMatch = True,
-                   sections   = ['section_run','section_method', 'section_system', 'section_single_configuration_calculation'],
+                sections   = ['section_run','section_method', 'section_system', 'section_single_configuration_calculation'],
                 subMatchers = [
 ### header ###
-                SM(name = 'header',
-                  startReStr = r"\s* This output is generated by\s*(?P<x_fleur_version>[\w*.]+)\s*\w*\*\s\*",
-                  sections=["x_fleur_header"],
-                  fixedStartValues={'program_name': 'Fleur', 'program_basis_set_type': 'FLAPW' }
-                  ),
+                    SM(name = 'header',
+                    startReStr = r"\s* This output is generated by\s*(?P<x_fleur_version>[\w*.]+)\s*\w*\*\s\*",
+                    sections=["x_fleur_header"],
+                    fixedStartValues={'program_name': 'Fleur', 'program_basis_set_type': 'FLAPW' }
+                   ),
                     
-                 SM(name = 'systemName',
-                    startReStr = r"\s*strho.*\n(?P<x_fleur_system_name>.*)",#L14
+                    SM(name = 'systemName',
+                    startReStr = r"\s*-{11}fl7para file ends here-{11}\s*",#L112
                     sections = ["section_system"],
                     subMatchers=[
-                        SM(r"\s*the volume of the unit cell omega=\s*(?P<x_fleur_unit_cell_volume_omega>[0-9.]+)"), #L136
+                        SM(r"\s*[0-9]*\s*f l a p w  version\s[\w].*"),
+                        SM(r"\s{4}(?P<x_fleur_system_name>[\w*\s*]+)\n"),#L117
+                        SM(r"\s*name of space group=(?P<x_fleur_space_group>.*)"),#L121
+                        
+                        SM(name = 'unit cell',
+                        startReStr = r"\sbravais matrices of real and reciprocal lattices",
+                        subMatchers=[
+                            SM(r"\s*(?P<x_fleur_lattice_vector_x>[-+0-9.]+)\s+(?P<x_fleur_lattice_vector_y>[-+0-9.]+)\s+(?P<x_fleur_lattice_vector_z>[-+0-9.]+)\s*(?P<x_fleur_rec_lattice_vector_x>[-+0-9.]+)\s+(?P<x_fleur_rec_lattice_vector_y>[-+0-9.]+)\s+(?P<x_fleur_rec_lattice_vector_z>[-+0-9.]+)",#L131-5
+                            repeats = True
+                           )
+                        ]),
+
                         SM(r"\s*the volume of the unit cell omega-tilda=\s*(?P<x_fleur_unit_cell_volume>[0-9.]+)"),#L137
+                        SM(r"\s*the volume of the unit cell omega=\s*(?P<x_fleur_unit_cell_volume_omega>[0-9.]+)"), #L138
+                        
 #                        SM(r"\s*exchange-correlation:\s*(?P<x_fleur_exch_pot>\w*\s*.*)",sections = ['x_fleur_section_XC']), #L140
                         SM(r"\s*exchange-correlation:\s*(?P<x_fleur_exch_pot>\w*)\s*(?P<x_fleur_xc_correction>\w*\s*.*)",sections = ['x_fleur_section_XC']), #L140
+                        
+                        SM(name = 'atomPositions',
+                        startReStr = r"\s*(?P<x_fleur_name_of_atom_type>\w*)\s+(?P<x_fleur_nuclear_number>[0-9]+)\s+(?P<x_fleur_number_of_core_levels>[0-9]+)\s+(?P<x_fleur_lexpansion_cutoff>[0-9.]+)\s+(?P<x_fleur_mt_gridpoints>[0-9.]+)\s+(?P<x_fleur_mt_radius>[0-9.]+)\s+(?P<x_fleur_logarythmic_increment>[0-9.]+)",
+                        sections=["x_fleur_section_equiv_atoms"],
+                        repeats = True,
+                        subMatchers=[
+                            #SM(r"\s*(?P<x_fleur_name_of_atom_type>\w*)\s+(?P<x_fleur_nuclear_number>[0-9]+)\s+(?P<x_fleur_number_of_core_levels>[0-9]+)\s+(?P<x_fleur_lexpansion_cutoff>[0-9.]+)\s+(?P<x_fleur_mt_gridpoints>[0-9]+)\s+(?P<x_fleur_mt_radius>[0-9.]+)\s+(?P<x_fleur_logarythmic_increment>[0-9.]+)"),#L144
+                            SM(r"\s{2}(?P<x_fleur_atom_pos_x>[-+0-9.]+)\s+(?P<x_fleur_atom_pos_y>[-+0-9.]+)\s+(?P<x_fleur_atom_pos_z>[-+0-9.]+)\s+(?P<x_fleur_atom_coord_scale>[-+0-9.]*)",#L145
+                            repeats = True 
+                           )
+                        ]),
+
                         SM(r"\s* Suggested values for input:"),
                         SM(r"\s*k_max\s=\s*(?P<x_fleur_k_max>.*)"),#L154
                         SM(r"\s*G_max\s=\s*(?P<x_fleur_G_max>.*)"),#L155
@@ -272,16 +356,26 @@ mainFileDescription = SM(
                         SM(r"\s*total nuclear charge      =\s*(?P<x_fleur_tot_nucl_charge>.*)") #L1108
 
                     ]),
-            
-                SM(
-                      name = "scf iteration",
-                      startReStr = r"\s*it=       \s*(?P<x_fleur_iteration_number>[0-9]+)",
-                      sections=["section_scf_iteration"],
-                      repeats = True,
-                      subMatchers=[
-                               SM(r"---->\s*total energy=\s*(?P<x_fleur_energy_total>[-+0-9.]+)")
-                      ]
-                    )
+                    #Check problematic SM
+                    SM(name = "scf iteration",
+                       startReStr = r"\s*it=       \s*(?P<x_fleur_iteration_number>[0-9]+)",
+                       sections=["section_scf_iteration"],
+                       repeats = True,
+                       subMatchers=[
+                           SM(r"---->\s*total energy=\s*(?P<x_fleur_energy_total>[-+0-9.]+)\shtr"),
+
+
+                           SM(startReStr = r"\W{5}\s+TOTAL FORCES ON ATOMS\s+\W{5}",
+                              subMatchers = [
+                                  SM(r"\sTOTAL FORCE FOR ATOM TYPE=\s*[0-9]\s+X=\s+(?P<x_fleur_tot_for_x>[0-9.]+)\s+Y=\s+(?P<x_fleur_tot_for_y>[0-9.]+)\s+Z=\s+(?P<x_fleur_tot_for_z>[0-9.]+)", repeats = True),#L3825 first
+                                  SM(r"\s*FX_TOT=(?P<x_fleur_tot_for_fx>[-+0-9.]+)\sFY_TOT=(?P<x_fleur_tot_for_fy>[-+0-9.]+)\sFZ_TOT=(?P<x_fleur_tot_for_fz>[-+0-9.]+)", repeats = True)
+                              ], repeats = True),
+
+                       
+                           SM(r"---->\s*.*tkb\*entropy.*=\s*(?P<x_fleur_entropy>[-+0-9.]+)\shtr"),
+                           SM(r"---->\s*free energy=\s*(?P<x_fleur_free_energy>[-+0-9.]+)\shtr")
+                       ]
+                   )
                 ])
               ])
 
@@ -290,7 +384,8 @@ mainFileDescription = SM(
 cachingLevelForMetaName = {
 
     "XC_functional_name": CachingLevel.ForwardAndCache,
-    "energy_total": CachingLevel.ForwardAndCache
+#    "energy_total": CachingLevel.ForwardAndCache,
+    
     
  }
 # loading metadata from nomad-meta-info/meta_info/nomad_meta_info/fleur.nomadmetainfo.json
