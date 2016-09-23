@@ -378,7 +378,7 @@ mainFileDescription = SM(
                            SM(r"\s*---->\s*total energy=\s*(?P<x_fleur_energy_total>[-+0-9.]+)\s*htr"),
 
 
-                           SM(startReStr = r"\W{5}\s+TOTAL FORCES ON ATOMS\s+\W{5}",
+                           SM(startReStr = r"\s*\W{5}\s+TOTAL FORCES ON ATOMS\s+\W{5}",
                               subMatchers = [
                                   SM(r"\sTOTAL FORCE FOR ATOM TYPE=\s*[0-9]\s+X=\s+(?P<x_fleur_tot_for_x>[0-9.]+)\s+Y=\s+(?P<x_fleur_tot_for_y>[0-9.]+)\s+Z=\s+(?P<x_fleur_tot_for_z>[0-9.]+)", repeats = True),#L3825 first
                                   SM(r"\s*FX_TOT=(?P<x_fleur_tot_for_fx>[-+0-9.]+)\sFY_TOT=(?P<x_fleur_tot_for_fy>[-+0-9.]+)\sFZ_TOT=(?P<x_fleur_tot_for_fz>[-+0-9.]+)", repeats = True)
