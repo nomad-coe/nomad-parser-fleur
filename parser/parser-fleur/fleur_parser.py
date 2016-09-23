@@ -77,6 +77,11 @@ class FleurContext(object):
                 xmlParser.parseFile(fIn)
 
 
+        #if self.secSystemIndex is None:
+        self.secSystemIndex = gIndex
+        #        self.secSystemIndex["single_configuration_calculation_to_system_ref"] = gIndex
+
+
     def onClose_section_single_configuration_calculation(self, backend, gIndex, section):
         """Trigger called when section_single_configuration_calculation is opened.
         """
@@ -101,11 +106,6 @@ class FleurContext(object):
         self.secMethodIndex = gIndex
 #        self.secMethodIndex["single_configuration_to_calculation_method_ref"] = gIndex
 
-
-    def onOpen_section_system(self, backend, gIndex, section):
-        #if self.secSystemIndex is None:        
-        self.secSystemIndex = gIndex
-        #        self.secSystemIndex["single_configuration_calculation_to_system_ref"] = gIndex    
 
     def onClose_section_system(self, backend, gIndex, section):
 
@@ -352,6 +352,13 @@ mainFileDescription = SM(
                         SM(r"\s*number of valence electrons=\s*(?P<x_fleur_nr_of_valence_electrons>[0-9.]+)"),#190
                         SM(r"\s*temperature broadening\s*=\s*(?P<x_fleur_smearing_temperature>[0-9.]+)"),#191
 
+                        SM(r"\s*number of k-points for this window =\s*(?P<x_fleur_nkptd>[0-9]*)"), #723
+                        SM(name = 'k-point',
+                           startReStr = r"\s{11}coordinates\s{11}weights",
+                           subMatchers = [
+                               SM(r"\s+(?P<x_fleur_k_point_x>[0-9.]+)\s+(?P<x_fleur_k_point_y>[0-9.]+)\s+(?P<x_fleur_k_point_z>[0-9.]+)\s+(?P<x_fleur_k_point_weight>[0-9.]+)", repeats = True   #L725
+                              ) 
+                           ]),
                         SM(r"\s*total electronic charge   =\s*(?P<x_fleur_tot_elec_charge>.*)"),#L1107
                         SM(r"\s*total nuclear charge      =\s*(?P<x_fleur_tot_nucl_charge>.*)") #L1108
 
