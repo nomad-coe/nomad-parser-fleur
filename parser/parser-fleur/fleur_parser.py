@@ -331,14 +331,20 @@ mainFileDescription = SM(
                         
                         SM(name = 'atomPositions',
                         startReStr = r"\s*(?P<x_fleur_name_of_atom_type>\w*)\s+(?P<x_fleur_nuclear_number>[0-9]+)\s+(?P<x_fleur_number_of_core_levels>[0-9]+)\s+(?P<x_fleur_lexpansion_cutoff>[0-9.]+)\s+(?P<x_fleur_mt_gridpoints>[0-9.]+)\s+(?P<x_fleur_mt_radius>[0-9.]+)\s+(?P<x_fleur_logarythmic_increment>[0-9.]+)",
-                        sections=["x_fleur_section_equiv_atoms"],
+                         sections=["x_fleur_section_equiv_atoms"],
                         repeats = True,
-                        subMatchers=[
-                            #SM(r"\s*(?P<x_fleur_name_of_atom_type>\w*)\s+(?P<x_fleur_nuclear_number>[0-9]+)\s+(?P<x_fleur_number_of_core_levels>[0-9]+)\s+(?P<x_fleur_lexpansion_cutoff>[0-9.]+)\s+(?P<x_fleur_mt_gridpoints>[0-9]+)\s+(?P<x_fleur_mt_radius>[0-9.]+)\s+(?P<x_fleur_logarythmic_increment>[0-9.]+)"),#L144
-                            SM(r"\s{2}(?P<x_fleur_atom_pos_x>[-+0-9.]+)\s+(?P<x_fleur_atom_pos_y>[-+0-9.]+)\s+(?P<x_fleur_atom_pos_z>[-+0-9.]+)\s+(?P<x_fleur_atom_coord_scale>[-+0-9.]*)",#L145
-                            repeats = True 
-                           )
-                        ]),
+                           subMatchers=[
+                               SM(name = 'equiv atoms',
+                               startReStr = r"\s*(?P<x_fleur_atom_pos_x>[-+0-9.]+)\s+(?P<x_fleur_atom_pos_y>[-+0-9.]+)\s+(?P<x_fleur_atom_pos_z>[-+0-9.]+)\s+(?P<x_fleur_atom_coord_scale>[-+0-9.]*)",
+                        #       sections=["x_fleur_section_equiv_atoms"],
+                                  subMatchers = [
+                                      SM(r"\s*(?P<x_fleur_atom_pos_x>[-+0-9.]+)\s+(?P<x_fleur_atom_pos_y>[-+0-9.]+)\s+(?P<x_fleur_atom_pos_z>[-+0-9.]+)\s+(?P<x_fleur_atom_coord_scale>[-+0-9.]*)",#L145
+                                      repeats = True 
+                                     )    
+                                  ]
+                              )
+                           ]),
+                           
 
                         SM(r"\s* Suggested values for input:"),
                         SM(r"\s*k_max\s=\s*(?P<x_fleur_k_max>.*)"),#L154
@@ -365,11 +371,11 @@ mainFileDescription = SM(
                     ]),
                     #Check problematic SM
                     SM(name = "scf iteration",
-                       startReStr = r"\s*it=       \s*(?P<x_fleur_iteration_number>[0-9]+)",
+                       startReStr = r"\s*it=\s*(?P<x_fleur_iteration_number>[0-9]+)",
                        sections=["section_scf_iteration"],
                        repeats = True,
                        subMatchers=[
-                           SM(r"---->\s*total energy=\s*(?P<x_fleur_energy_total>[-+0-9.]+)\shtr"),
+                           SM(r"\s*---->\s*total energy=\s*(?P<x_fleur_energy_total>[-+0-9.]+)\s*htr"),
 
 
                            SM(startReStr = r"\W{5}\s+TOTAL FORCES ON ATOMS\s+\W{5}",
@@ -379,8 +385,8 @@ mainFileDescription = SM(
                               ], repeats = True),
 
                        
-                           SM(r"---->\s*.*tkb\*entropy.*=\s*(?P<x_fleur_entropy>[-+0-9.]+)\shtr"),
-                           SM(r"---->\s*free energy=\s*(?P<x_fleur_free_energy>[-+0-9.]+)\shtr")
+                           SM(r"\s*---->\s*.*tkb\*entropy.*=\s*(?P<x_fleur_entropy>[-+0-9.]+)\shtr"),
+                           SM(r"\s*---->\s*free energy=\s*(?P<x_fleur_free_energy>[-+0-9.]+)\shtr")
                        ]
                    )
                 ])
