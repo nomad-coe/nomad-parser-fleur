@@ -3,7 +3,7 @@ import setup_paths
 from nomadcore.simple_parser import SimpleMatcher as SM
 from nomadcore.simple_parser import mainFunction, AncillaryParser, CachingLevel
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
-import os, sys, json
+import os, sys, json, logging
 import numpy as np
 #import fleur_parser_inp
 #import fleur_XML_parser
@@ -169,51 +169,51 @@ class FleurContext(object):
 
     def onClose_x_fleur_section_XC(self, backend, gIndex, section):
         xc_index = section["x_fleur_exch_pot"]
+        logging.error("winsectxc: %s -> %s", section, xc_index)
         if not xc_index:
-            functional = "pbe"
-        if functional:
-            xc_map_legend = {
+            xc_index = ["pbe"]
+        xc_map_legend = {
 
-                'pbe': ['GGA_X_PBE', 'GGA_C_PBE'],
+            'pbe': ['GGA_X_PBE', 'GGA_C_PBE'],
+            
+            'rpbe': ['GGA_X_PBE', 'GGA_C_PBE'],
+            
+            'Rpbe': ['GGA_X_RPBE'],
+            
+            'pw91': ['GGA_X_PW91','GGA_C_PW91'],
+            
+            'l91': ['LDA_C_PW','LDA_C_PW_RPA','LDA_C_PW_MOD','LDA_C_OB_PW'],
+            
+            'vwn': ['LDA_C_VWN','LDA_C_VWN_1','LDA_C_VWN_2','LDA_C_VWN_3','LDA_C_VWN_4','LDA_C_VWN_RPA'],
 
-                'rpbe': ['GGA_X_PBE', 'GGA_C_PBE'],
+            'bh': ['LDA_C_VBH'],
 
-                'Rpbe': ['GGA_X_RPBE'],
-                
-                'pw91': ['GGA_X_PW91','GGA_C_PW91'],
-                
-                'l91': ['LDA_C_PW','LDA_C_PW_RPA','LDA_C_PW_MOD','LDA_C_OB_PW'],
+            'pz':['LDA_C_PZ'],
 
-                'vwn': ['LDA_C_VWN','LDA_C_VWN_1','LDA_C_VWN_2','LDA_C_VWN_3','LDA_C_VWN_4','LDA_C_VWN_RPA'],
+            'x-a': [],
 
-                'bh': ['LDA_C_VBH'],
+            'mjw': [],
 
-                'pz':['LDA_C_PZ'],
+            'wign': [],
 
-                'x-a': [],
+            'hl': [],
 
-                'mjw': [],
+            'xal': [],
 
-                'wign': [],
-
-                'hl': [],
-
-                'xal': [],
-
-                'relativistic': ['---']
+            'relativistic': ['---']
             #http://dx.doi.org/10.1088/0022-3719/12/15/007
 
-            }
+        }
     
-            # Push the functional string into the backend
-            nomadNames = xc_map_legend.get(functional)
-            if not nomadNames:
-                raise Exception("Unhandled xc functional %s found" % functional)
+        # Push the functional string into the backend
+        xc_map_legend = xc_map_legend.get(xc_index[0])
+        if not xc_map_legend:
+            raise Exception("Unhandled xc functional %s found" % xc_index)
 
-            for xc_name in nomadNames:
-                s = backend.openSection("section_XC_functionals")
-                backend.addValue("XC_functional_name", xc_name)
-                backend.closeSection("section_XC_functionals", s)
+        for xc_name in xc_map_legend:
+            s = backend.openSection("section_XC_functionals")
+            backend.addValue("XC_functional_name", xc_name)
+            backend.closeSection("section_XC_functionals", s)
 
 
 
@@ -362,7 +362,7 @@ mainFileDescription = SM(
                         SM(name = 'k-point',
                            startReStr = r"\s{11}coordinates\s{11}weights",
                            subMatchers = [
-                               SM(r"\s+(?P<x_fleur_k_point_x>[0-9.]+)\s+(?P<x_fleur_k_point_y>[0-9.]+)\s+(?P<x_fleur_k_point_z>[0-9.]+)\s+(?P<x_fleur_k_point_weight>[0-9.]+)", repeats = True   #L725
+                               SM(r"\s+(?P<x_fleur_k_point_x>[-+0-9.]+)\s+(?P<x_fleur_k_point_y>[-+0-9.]+)\s+(?P<x_fleur_k_point_z>[-+0-9.]+)\s+(?P<x_fleur_k_point_weight>[-+0-9.]+)", repeats = True   #L725
                               ) 
                            ]),
                         SM(r"\s*total electronic charge   =\s*(?P<x_fleur_tot_elec_charge>.*)"),#L1107
