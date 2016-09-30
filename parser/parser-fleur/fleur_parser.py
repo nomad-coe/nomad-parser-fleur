@@ -110,14 +110,14 @@ class FleurContext(object):
     def onClose_section_system(self, backend, gIndex, section):
 
         #backend.addValue("smearing_kind", x_fleur_smearing_kind)
-        smear_kind = section['x_fleur_smearing_kind']
-        if smear_kind is not None:
+        smearing_kind = section['x_fleur_smearing_kind']
+        if smearing_kind is not None:
         #    value = ''
             backend.addValue('x_fleur_smearing_kind', value)
 
 
-        smear_width = section['x_fleur_smearing_width']
-        if smear_width is not None:
+        smearing_width = section['x_fleur_smearing_width']
+        if smearing_width is not None:
         #    value = ''
             backend.addValue('x_fleur_smearing_width', value)
 
