@@ -129,6 +129,7 @@ class FleurContext(object):
             api = section['x_fleur_atom_pos_' + i]
             if api is not None:
                atom_pos.append(api)
+               logging.error("atom_pos: %s x %s y %s z %s",atom_pos, x, y, z)
         if atom_pos:
             # need to transpose array since its shape is [number_of_atoms,3] in the metadata
            backend.addArrayValues('atom_positions', np.transpose(np.asarray(atom_pos)))
@@ -318,7 +319,7 @@ mainFileDescription = SM(
                         SM(name = 'unit cell',
                         startReStr = r"\sbravais matrices of real and reciprocal lattices",
                         subMatchers=[
-                            SM(r"\s*(?P<x_fleur_lattice_vector_x>[-+0-9.]+)\s+(?P<x_fleur_lattice_vector_y>[-+0-9.]+)\s+(?P<x_fleur_lattice_vector_z>[-+0-9.]+)\s*(?P<x_fleur_rec_lattice_vector_x>[-+0-9.]+)\s+(?P<x_fleur_rec_lattice_vector_y>[-+0-9.]+)\s+(?P<x_fleur_rec_lattice_vector_z>[-+0-9.]+)",#L131-5
+                            SM(r"\s*(?P<x_fleur_lattice_vector_x__bohr>[-+0-9.]+)\s+(?P<x_fleur_lattice_vector_y__bohr>[-+0-9.]+)\s+(?P<x_fleur_lattice_vector_z__bohr>[-+0-9.]+)\s*(?P<x_fleur_rec_lattice_vector_x__bohr>[-+0-9.]+)\s+(?P<x_fleur_rec_lattice_vector_y__bohr>[-+0-9.]+)\s+(?P<x_fleur_rec_lattice_vector_z__bohr>[-+0-9.]+)",#L131-5
                             repeats = True
                            )
                         ]),
@@ -335,10 +336,10 @@ mainFileDescription = SM(
                         repeats = True,
                            subMatchers=[
                                SM(name = 'equiv atoms',
-                               startReStr = r"\s*(?P<x_fleur_atom_pos_x>[-+0-9.]+)\s+(?P<x_fleur_atom_pos_y>[-+0-9.]+)\s+(?P<x_fleur_atom_pos_z>[-+0-9.]+)\s+(?P<x_fleur_atom_coord_scale>[-+0-9.]*)",
+                               startReStr = r"\s*(?P<x_fleur_atom_pos_x__bohr>[-+0-9.]+)\s+(?P<x_fleur_atom_pos_y__bohr>[-+0-9.]+)\s+(?P<x_fleur_atom_pos_z__bohr>[-+0-9.]+)\s+(?P<x_fleur_atom_coord_scale>[-+0-9.]*)",
                         #       sections=["x_fleur_section_equiv_atoms"],
                                   subMatchers = [
-                                      SM(r"\s*(?P<x_fleur_atom_pos_x>[-+0-9.]+)\s+(?P<x_fleur_atom_pos_y>[-+0-9.]+)\s+(?P<x_fleur_atom_pos_z>[-+0-9.]+)\s+(?P<x_fleur_atom_coord_scale>[-+0-9.]*)",#L145
+                                      SM(r"\s*(?P<x_fleur_atom_pos_x__bohr>[-+0-9.]+)\s+(?P<x_fleur_atom_pos_y__bohr>[-+0-9.]+)\s+(?P<x_fleur_atom_pos_z__bohr>[-+0-9.]+)\s+(?P<x_fleur_atom_coord_scale>[-+0-9.]*)",#L145
                                       repeats = True 
                                      )    
                                   ]
@@ -354,7 +355,7 @@ mainFileDescription = SM(
                         SM(r"\s*total number of atoms=\s*(?P<x_fleur_total_atoms>[0-9]+)"),
 
                         SM(r"\s*(?P<x_fleur_smearing_kind>\w*)-integration is used\s*.*"),#L187
-                        SM(r"\s*gaussian half width\s*=\s*(?P<x_fleur_smearing_width>[0-9.]+)"),#188
+                        SM(r"\s*gaussian half width\s*=\s*(?P<x_fleur_smearing_width__hartree>[0-9.]+)"),#188
                         SM(r"\s*number of valence electrons=\s*(?P<x_fleur_nr_of_valence_electrons>[0-9.]+)"),#190
                         SM(r"\s*temperature broadening\s*=\s*(?P<x_fleur_smearing_temperature>[0-9.]+)"),#191
 
@@ -375,7 +376,7 @@ mainFileDescription = SM(
                        sections=["section_scf_iteration"],
                        repeats = True,
                        subMatchers=[
-                           SM(r"\s*---->\s*total energy=\s*(?P<x_fleur_energy_total>[-+0-9.]+)\s*htr"),
+                           SM(r"\s*---->\s*total energy=\s*(?P<x_fleur_energy_total__hartree>[-+0-9.]+)\s*htr"),
 
 
                            SM(startReStr = r"\s*\W{5}\s+TOTAL FORCES ON ATOMS\s+\W{5}",
@@ -385,8 +386,8 @@ mainFileDescription = SM(
                               ], repeats = True),
 
                        
-                           SM(r"\s*---->\s*.*tkb\*entropy.*=\s*(?P<x_fleur_entropy>[-+0-9.]+)\shtr"),
-                           SM(r"\s*---->\s*free energy=\s*(?P<x_fleur_free_energy>[-+0-9.]+)\shtr")
+                           SM(r"\s*---->\s*.*tkb\*entropy.*=\s*(?P<x_fleur_entropy__hartree>[-+0-9.]+)\shtr"),
+                           SM(r"\s*---->\s*free energy=\s*(?P<x_fleur_free_energy__hartree>[-+0-9.]+)\shtr")
                        ]
                    )
                 ])
