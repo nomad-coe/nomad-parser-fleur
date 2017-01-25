@@ -331,7 +331,7 @@ mainFileDescription = SM(
                         SM(r"\s*exchange-correlation:\s*(?P<x_fleur_exch_pot>\w*)\s*(?P<x_fleur_xc_correction>\w*\s*.*)",sections = ['x_fleur_section_XC']), #L140
                         
                         SM(name = 'atomPositions',
-                        startReStr = r"\s*(?P<x_fleur_name_of_atom_type>\w*)\s+(?P<x_fleur_nuclear_number>[0-9]+)\s+(?P<x_fleur_number_of_core_levels>[0-9]+)\s+(?P<x_fleur_lexpansion_cutoff>[0-9.]+)\s+(?P<x_fleur_mt_gridpoints>[0-9.]+)\s+(?P<x_fleur_mt_radius>[0-9.]+)\s+(?P<x_fleur_logarythmic_increment>[0-9.]+)",
+                        startReStr = r"\s*(?P<x_fleur_atom_name>\w*)\s+(?P<x_fleur_nuclear_number>[0-9]+)\s+(?P<x_fleur_number_of_core_levels>[0-9]+)\s+(?P<x_fleur_lexpansion_cutoff>[0-9.]+)\s+(?P<x_fleur_mt_gridpoints>[0-9.]+)\s+(?P<x_fleur_mt_radius>[0-9.]+)\s+(?P<x_fleur_logarythmic_increment>[0-9.]+)",
                          sections=["x_fleur_section_equiv_atoms"],
                         repeats = True,
                            subMatchers=[
