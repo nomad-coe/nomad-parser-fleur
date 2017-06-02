@@ -9,7 +9,7 @@ import numpy as np
 #import fleur_XML_parser
 
 ################################################################
-# This is the parser for the main output file of Fleur (out)
+# This is the parser for the main output file of Fleur (out) - adapted for version fleur26e
 ################################################################
 
 
@@ -309,10 +309,11 @@ mainFileDescription = SM(
                    ),
                     
                     SM(name = 'systemName',
-                    startReStr = r"\s*-{11}fl7para file ends here-{11}\s*",#L112
+                    #startReStr = r"\s*-{11}fl7para file ends here-{11}\s*",#L112
+                    startReStr = r"\s*[0-9]*\s*f l a p w  version\s[\w].*",
                     sections = ["section_system"],
                     subMatchers=[
-                        SM(r"\s*[0-9]*\s*f l a p w  version\s[\w].*"),
+                     #   SM(r"\s*[0-9]*\s*f l a p w  version\s[\w].*"),
                         SM(r"\s{4}(?P<x_fleur_system_name>[\w*\s*]+)\n"),#L117
                         SM(r"\s*name of space group=(?P<x_fleur_space_group>.*)"),#L121
                         
