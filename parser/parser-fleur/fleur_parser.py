@@ -108,10 +108,10 @@ class FleurContext(object):
         backend.addValue('number_of_scf_iterations', self.scfIterNr)
         
         # write the references to section_method and section_system
-        #        method_index = self.secMethodIndex("single_configuration_to_calculation_method_ref")
+        #        method_index = self.secMethodIndex("single_configuration_calculation_to_method_ref")
         #        if method_index is not None:
         
-        backend.addValue('single_configuration_to_calculation_method_ref', self.secMethodIndex)
+        backend.addValue('single_configuration_calculation_to_method_ref', self.secMethodIndex)
         #        system_index = self.secSystemIndex("single_configuration_calculation_to_system_ref")
         #        if system_index is not None:
                 
@@ -123,7 +123,7 @@ class FleurContext(object):
         if self.rootSecMethodIndex is None:
             self.rootSecMethodIndex = gIndex
         self.secMethodIndex = gIndex
-#        self.secMethodIndex["single_configuration_to_calculation_method_ref"] = gIndex
+#        self.secMethodIndex["single_configuration_calculation_to_method_ref"] = gIndex
 
 
     def onClose_section_system(self, backend, gIndex, section):
@@ -148,7 +148,7 @@ class FleurContext(object):
             api = section['x_fleur_atom_pos_' + i]
             if api is not None:
                atom_pos.append(api)
-               logging.error("atom_pos: %s x %s y %s z %s",atom_pos, x, y, z)
+               #logging.error("atom_pos: %s x %s y %s z %s",atom_pos, x, y, z)
         if atom_pos:
             # need to transpose array since its shape is [number_of_atoms,3] in the metadata
            backend.addArrayValues('atom_positions', np.transpose(np.asarray(atom_pos)))
@@ -166,7 +166,9 @@ class FleurContext(object):
                atom_force.append(api)
         if atom_force:
             # need to transpose array since its shape is [number_of_atoms,3] in the metadata
-           backend.addArrayValues('atom_forces', np.transpose(np.asarray(atom_force)))
+            fId = backend.openSection('section_atom_forces')
+            backend.addArrayValues('atom_forces', np.transpose(np.asarray(atom_force)))
+            backend.closeSection('section_atom_forces', fId)
            
         #----4. unit_cell
         unit_cell = []
@@ -187,9 +189,9 @@ class FleurContext(object):
         # count number of SCF iterations
         self.scfIterNr += 1
 
-    def onClose_x_fleur_section_XC(self, backend, gIndex, section):
+    def onClose_x_fleur_section_xc(self, backend, gIndex, section):
         xc_index = section["x_fleur_exch_pot"]
-        logging.error("winsectxc: %s -> %s", section, xc_index)
+        #logging.error("winsectxc: %s -> %s", section, xc_index)
         if not xc_index:
             xc_index = ["pbe"]
         xc_map_legend = {
@@ -231,9 +233,9 @@ class FleurContext(object):
             raise Exception("Unhandled xc functional %s found" % xc_index)
 
         for xc_name in xc_map_legend:
-            s = backend.openSection("section_XC_functionals")
-            backend.addValue("XC_functional_name", xc_name)
-            backend.closeSection("section_XC_functionals", s)
+            s = backend.openSection("section_xc_functionals")
+            backend.addValue("xc_functional_name", xc_name)
+            backend.closeSection("section_xc_functionals", s)
 
 
 
@@ -252,8 +254,8 @@ class FleurContext(object):
 #        backend.addValue("sampling_method", sampling_method)
 #        backend.closeSection("section_sampling_method", samplingGIndex)
 #        frameSequenceGIndex = backend.openSection("section_frame_sequence")
-#        backend.addValue("frame_sequence_to_sampling_ref", samplingGIndex)
-#        backend.addArrayValues("frame_sequence_local_frames_ref", np.asarray(self.singleConfCalcs))
+#        backend.addValue("frame_sequence_to_sampling_method_ref", samplingGIndex)
+#        backend.addArrayValues("frame_sequence_to_frames_ref", np.asarray(self.singleConfCalcs))
 #        backend.closeSection("section_frame_sequence", frameSequenceGIndex)
 
 
@@ -347,8 +349,8 @@ mainFileDescription = SM(
                         SM(r"\s*the volume of the unit cell omega-tilda=\s*(?P<x_fleur_unit_cell_volume>[0-9.]+)"),#L137
                         SM(r"\s*the volume of the unit cell omega=\s*(?P<x_fleur_unit_cell_volume_omega>[0-9.]+)"), #L138
                         
-#                        SM(r"\s*exchange-correlation:\s*(?P<x_fleur_exch_pot>\w*\s*.*)",sections = ['x_fleur_section_XC']), #L140
-                        SM(r"\s*exchange-correlation:\s*(?P<x_fleur_exch_pot>\w*)\s*(?P<x_fleur_xc_correction>\w*\s*.*)",sections = ['x_fleur_section_XC']), #L140
+#                        SM(r"\s*exchange-correlation:\s*(?P<x_fleur_exch_pot>\w*\s*.*)",sections = ['x_fleur_section_xc']), #L140
+                        SM(r"\s*exchange-correlation:\s*(?P<x_fleur_exch_pot>\w*)\s*(?P<x_fleur_xc_correction>\w*\s*.*)",sections = ['x_fleur_section_xc']), #L140
                         
                         SM(name = 'atomPositions',
                         startReStr = r"\s*(?P<x_fleur_atom_name>\w*)\s+(?P<x_fleur_nuclear_number>[0-9]+)\s+(?P<x_fleur_number_of_core_levels>[0-9]+)\s+(?P<x_fleur_lexpansion_cutoff>[0-9.]+)\s+(?P<x_fleur_mt_gridpoints>[0-9.]+)\s+(?P<x_fleur_mt_radius>[0-9.]+)\s+(?P<x_fleur_logarythmic_increment>[0-9.]+)",
@@ -369,7 +371,7 @@ mainFileDescription = SM(
 
                         SM(r"\s* Suggested values for input:"),
                         SM(r"\s*k_max\s=\s*(?P<x_fleur_k_max>.*)"),#L154
-                        SM(r"\s*G_max\s=\s*(?P<x_fleur_G_max>.*)"),#L155
+                        SM(r"\s*G_max\s=\s*(?P<x_fleur_g_max>.*)"),#L155
                         SM(r"\s*volume of interstitial region=\s*(?P<x_fleur_vol_interstitial>[0-9.]+)"),#L157
                         SM(r"\s*number of atom types=\s*(?P<x_fleur_nr_of_atom_types>[0-9]+)"),#L160
                         SM(r"\s*total number of atoms=\s*(?P<x_fleur_total_atoms>[0-9]+)"),
@@ -417,7 +419,7 @@ mainFileDescription = SM(
 
 cachingLevelForMetaName = {
 
-    "XC_functional_name": CachingLevel.ForwardAndCache,
+    "xc_functional_name": CachingLevel.ForwardAndCache,
 #    "energy_total": CachingLevel.ForwardAndCache,
     
     

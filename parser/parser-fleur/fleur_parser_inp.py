@@ -75,7 +75,7 @@ def buildStructureMatchers():
     sections = ["section_run", "section_system"],
     subMatchers = [
         SM(name = 'systemName',
-           startReStr = r"\s*strho.*\n(?P<x_fleur_system_nameIn>.*)"),#L2
+           startReStr = r"\s*strho.*\n(?P<x_fleur_system_namein>.*)"),#L2
         SM(r"\s{2}(?P<<x_fleur_nr_of_atom_types>[0-9]+)\n",#L10
 #
            sections=["x_fleur_section_equiv_atoms"],
@@ -107,7 +107,7 @@ def get_cachingLevelForMetaName(metaInfoEnv, CachingLvl):
                                'section_run': CachingLvl,
                                'section_system': CachingLvl
                               }
-    cachingLevelForMetaName["x_fleur_system_nameIn"] = CachingLevel.ForwardAndCache
+    cachingLevelForMetaName["x_fleur_system_namein"] = CachingLevel.ForwardAndCache
     cachingLevelForMetaName["x_fleur_section_equiv_atoms"] = CachingLevel.ForwardAndCache
     return cachingLevelForMetaName
 
