@@ -47,7 +47,7 @@ class FleurInpContext(object):
 
     def onClose_section_system(self, backend, gIndex, section):
         equiv_atoms = section["x_fleur_section_equiv_atoms"]
-        #logging.error("section: %s", section)
+        #logging.info("section: %s", section)
         labels = []
         pos = []
         for eqAtoms in equiv_atoms:

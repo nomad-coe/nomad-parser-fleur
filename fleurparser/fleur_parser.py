@@ -208,7 +208,7 @@ class FleurContext(object):
 
     def onClose_x_fleur_section_XC(self, backend, gIndex, section):
         xc_index = section["x_fleur_exch_pot"]
-        logging.error("winsectxc: %s -> %s", section, xc_index)
+        logging.info("winsectxc: %s -> %s", section, xc_index)
         if not xc_index:
             xc_index = ["pbe"]
         xc_map_legend = {
