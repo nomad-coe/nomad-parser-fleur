@@ -1,0 +1,7 @@
+code-label: Fleur
+code-label-style: 'Found: 1) only F in capitals, 2) all in capitals.'
+code-url: https://www.flapw.de/
+parser-dir-name: dependencies/parsers/fleur/
+parser-git-url: https://gitlab.mpcdf.mpg.de/nomad-lab/parser-fleur
+parser-specific: ''
+table-of-files: ''
