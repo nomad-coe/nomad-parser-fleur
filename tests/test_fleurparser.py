@@ -36,17 +36,16 @@ def test_basic(parser):
 
     parser.parse('tests/data/Si/out', archive, None)
 
-    sec_run = archive.section_run[0]
-    assert sec_run.program_version == 'fleur.26b'
+    sec_run = archive.run[0]
+    assert sec_run.program.version == 'fleur.26b'
 
-    sec_system = archive.section_run[0].section_system[0]
-    assert sec_system.lattice_vectors[1][2].magnitude == approx(2.73444651e-10)
-    assert sec_system.atom_labels == ['Si', 'Si']
-    assert sec_system.atom_positions[1][2].magnitude == approx(-6.97283857e-11)
+    sec_system = archive.run[0].system[0]
+    assert sec_system.atoms.lattice_vectors[1][2].magnitude == approx(2.73444651e-10)
+    assert sec_system.atoms.labels == ['Si', 'Si']
+    assert sec_system.atoms.positions[1][2].magnitude == approx(-6.97283857e-11)
 
-    sec_sccs = sec_run.section_single_configuration_calculation
+    sec_sccs = sec_run.calculation
     assert len(sec_sccs) == 20
-    assert sec_sccs[18].energy_total.magnitude == approx(-2.52896385e-15)
-    assert sec_sccs[4].energy_free.magnitude == approx(-2.52896386e-15)
-    assert sec_sccs[9].atom_forces[1][1].magnitude == approx(7.34976523e-10)
-
+    assert sec_sccs[18].energy.total.value.magnitude == approx(-2.52896385e-15)
+    assert sec_sccs[4].energy.free.value.magnitude == approx(-2.52896386e-15)
+    assert sec_sccs[9].forces.total.value[1][1].magnitude == approx(7.34976523e-10)
