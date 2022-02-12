@@ -31,21 +31,45 @@ def parser():
     return FleurParser()
 
 
-def test_basic(parser):
+def test_scf(parser):
     archive = EntryArchive()
 
     parser.parse('tests/data/Si/out', archive, None)
 
-    sec_run = archive.run[0]
-    assert sec_run.program.version == 'fleur.26b'
+    sec_run = archive.run
+    assert sec_run[0].program.version == 'fleur.26b'
+    assert sec_run[0].x_fleur_header[0].x_fleur_precision == 'DOUBLE'
+    assert not sec_run[0].x_fleur_header[0].x_fleur_with_soc
+    assert sec_run[0].x_fleur_header[0].x_fleur_additional_flags == 'CPP_MPI'
 
-    sec_system = archive.run[0].system[0]
-    assert sec_system.atoms.lattice_vectors[1][2].magnitude == approx(2.73444651e-10)
-    assert sec_system.atoms.labels == ['Si', 'Si']
-    assert sec_system.atoms.positions[1][2].magnitude == approx(-6.97283857e-11)
+    sec_method = sec_run[0].method
+    assert sec_method[0].x_fleur_input_parameters['chng'] == approx(-0.100E-11)
+    assert sec_method[0].x_fleur_input_parameters['ctail'] == 'T'
+    assert sec_method[0].x_fleur_input_parameters['lflip'] == ['F', 1, 1]
+    assert sec_method[0].x_fleur_parameters['vM'] == 0
+    assert sec_method[0].x_fleur_eigenvalues_parameters['number of energy windows'] == 1
+    assert sec_method[0].dft.xc_functional.exchange[0].name == 'GGA_X_PBE'
+    assert sec_method[0].dft.xc_functional.x_fleur_xc_correction == 'non-relativi correction'
+    assert sec_method[0].electronic.smearing.kind == 'fermi'
+    assert sec_method[0].electronic.smearing.width == approx(0.001)
+    assert sec_method[0].x_fleur_tot_nucl_charge == approx(28.)
 
-    sec_sccs = sec_run.calculation
-    assert len(sec_sccs) == 20
-    assert sec_sccs[18].energy.total.value.magnitude == approx(-2.52896385e-15)
-    assert sec_sccs[4].energy.free.value.magnitude == approx(-2.52896386e-15)
-    assert sec_sccs[9].forces.total.value[1][1].magnitude == approx(7.34976523e-10)
+    sec_system = sec_run[0].system
+    assert sec_system[0].atoms.lattice_vectors[1][2].magnitude == approx(2.73444651e-10)
+    assert sec_system[0].atoms.labels == ['Si', 'Si']
+    assert sec_system[0].atoms.positions[1][2].magnitude == approx(-6.97284111e-11)
+    assert sec_system[0].x_fleur_parameters['lattice'] == 'any'
+    assert sec_system[0].x_fleur_parameters['the vacuum begins at z'] == 0.
+    assert sec_system[0].x_fleur_unit_cell_volume.magnitude == approx(275.952900)
+    assert sec_system[0].x_fleur_G_max == approx(11.14815)
+    assert sec_system[0].x_fleur_vol_interstitial == approx(192.693364)
+
+    sec_scc = sec_run[0].calculation
+    assert len(sec_scc[0].scf_iteration) == 20
+    assert sec_scc[0].scf_iteration[18].energy.total.value.magnitude == approx(-2.52896385e-15)
+    assert sec_scc[0].scf_iteration[4].energy.free.value.magnitude == approx(-2.52896386e-15)
+    assert sec_scc[0].scf_iteration[9].forces.total.value[1][1].magnitude == approx(7.34976523e-10)
+    assert sec_scc[0].energy.total_t0.value.magnitude == approx(-2.52896385e-15)
+    assert sec_scc[0].energy.fermi.magnitude == approx(9.64676355e-19)
+    assert sec_scc[0].eigenvalues[0].kpoints[5][0] == approx(-0.111111)
+    assert sec_scc[0].eigenvalues[0].energies[0][15][1].magnitude == approx(-2.58602618e-19)

@@ -17,10 +17,10 @@
 # limitations under the License.
 #
 import numpy as np            # pylint: disable=unused-import
-import typing                 # pylint: disable=unused-import
+
 from nomad.metainfo import (  # pylint: disable=unused-import
     MSection, MCategory, Category, Package, Quantity, Section, SubSection, SectionProxy,
-    Reference
+    Reference, JSON
 )
 from nomad.datamodel.metainfo import simulation
 
@@ -40,6 +40,30 @@ class x_fleur_header(MSection):
         shape=[],
         description='''
         Version of Fleur
+        ''')
+
+    x_fleur_precision = Quantity(
+        type=str,
+        shape=[],
+        description='''
+        ''')
+
+    x_fleur_with_inversion = Quantity(
+        type=bool,
+        shape=[],
+        description='''
+        ''')
+
+    x_fleur_with_soc = Quantity(
+        type=bool,
+        shape=[],
+        description='''
+        ''')
+
+    x_fleur_additional_flags = Quantity(
+        type=str,
+        shape=[],
+        description='''
         ''')
 
 
@@ -319,6 +343,12 @@ class System(simulation.system.System):
         volume of interstitial region
         ''')
 
+    x_fleur_parameters = Quantity(
+        type=JSON,
+        shape=[],
+        description='''
+        ''')
+
     x_fleur_section_equiv_atoms = SubSection(
         sub_section=SectionProxy('x_fleur_section_equiv_atoms'),
         repeats=True)
@@ -474,6 +504,46 @@ class Method(simulation.method.Method):
         Fermi smearing temperature set in Kelvin
         ''')
 
+    x_fleur_input_parameters = Quantity(
+        type=JSON,
+        shape=[],
+        description='''
+        ''')
+
+    x_fleur_parameters = Quantity(
+        type=JSON,
+        shape=[],
+        description='''
+        ''')
+
+    x_fleur_eigenvalues_parameters = Quantity(
+        type=JSON,
+        shape=[],
+        description='''
+        ''')
+
     x_fleur_section_XC = SubSection(
         sub_section=SectionProxy('x_fleur_section_XC'),
         repeats=True)
+
+
+class XCFunctional(simulation.method.XCFunctional):
+
+    m_def = Section(validate=False, extends_base_section=True)
+
+    x_fleur_xc_correction = Quantity(
+        type=str,
+        shape=[],
+        description='''
+        ''')
+
+
+class BaseCalculation(simulation.calculation.BaseCalculation):
+
+    m_def = Section(validate=False, extends_base_section=True)
+
+    x_fleur_n_occupied_states = Quantity(
+        type=np.dtype(np.int32),
+        shape=[],
+        description='''
+        ''')
